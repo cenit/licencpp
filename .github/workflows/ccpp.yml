@@ -1,0 +1,30 @@
+name: licencpp ci
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+  schedule:
+    - cron: '0 2 * * *'
+
+jobs:
+  win-vcpkg:
+    runs-on: windows-latest
+    steps:
+    - uses: actions/checkout@v3
+      with:
+        submodules: recursive
+    - name: 'Build'
+      shell: pwsh
+      run: |
+        python -m pip install --upgrade pip setuptools wheel pyinstaller
+        pip install -r requirements.txt
+        pyinstaller -F ./src/licencpp.py --noconfirm
+    - uses: actions/upload-artifact@v3
+      with:
+        name: licencpp-${{ runner.os }}
+        path: ${{ github.workspace }}/*licencpp*
+    - uses: actions/upload-artifact@v3
+      with:
+        name: licencpp-${{ runner.os }}
+        path: ${{ github.workspace }}/*.md
