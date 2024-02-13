@@ -15,6 +15,7 @@ import os
 import subprocess
 import xml.etree.ElementTree as ET
 import datetime
+import yaml
 
 # Define paths
 project_vcpkg_json = 'vcpkg.json'  # Path to your project's vcpkg.json
@@ -41,16 +42,37 @@ def parse_dgml(dgml_path):
     return dependencies
 
 
-# SPDX document header
-spdx_document = """SPDXVersion: SPDX-2.2
-DataLicense: CC0-1.0
-SPDXID: SPDXRef-DOCUMENT
-DocumentName: ProjectDependencyLicenseInfo
-DocumentNamespace: http://spdx.org/spdxdocs/project-dependency-license-info-"""
-spdx_document += str(datetime.datetime.now().timestamp())  # Unique namespace
-spdx_document += """
-Creator: Organization: cenit
-Created: """ + datetime.datetime.now().isoformat()
+def generate_spdx_document(dependencies_info):
+    spdx_document = {
+        "SPDXID": "SPDXRef-DOCUMENT",
+        "spdxVersion": "SPDX-2.2",
+        "creationInfo": {
+            "created": datetime.datetime.now().strftime('%Y-%m-%dT%H:%M:%S.%f')[:-3] + 'Z',
+            "creators": ["Tool: licencpp.py 0.1.0"],
+            "licenseListVersion": "3.9"
+        },
+        "name": "ProjectDependencyLicenseInfo",
+        "dataLicense": "CC0-1.0",
+        "documentNamespace": f"http://spdx.org/spdxdocs/{project_name}-{datetime.datetime.now().timestamp()}",
+        "documentDescribes": [],  # List to be filled with SPDX package IDs
+        "packages": []
+    }
+
+    for dep, info in dependencies_info.items():
+        package_spdx_id = f"SPDXRef-Package-{dep}"
+        package = {
+            "name": dep,
+            "SPDXID": package_spdx_id,
+            "downloadLocation": info['homepage'],
+            "licenseConcluded": info['license'],
+            "licenseDeclared": info['license'],
+        }
+        spdx_document["packages"].append(package)
+        spdx_document["documentDescribes"].append(
+            package_spdx_id)  # Add package SPDX ID to the list
+
+    with open("project_spdx_document.spdx.yaml", "w") as spdx_file:
+        yaml.dump(spdx_document, spdx_file, sort_keys=False)
 
 def get_license_and_homepage_from_vcpkg_json(dep_name):
     vcpkg_json_path = os.path.join(vcpkg_ports_dir, dep_name, 'vcpkg.json')
@@ -59,7 +81,6 @@ def get_license_and_homepage_from_vcpkg_json(dep_name):
             dep_data = json.load(file)
         return dep_data.get('license'), dep_data.get('homepage')
     return None, None
-
 
 dependencies = parse_dgml(dependencies_dgml)
 dependencies_info = {}
@@ -78,24 +99,4 @@ for dep in dependencies:
             dependencies_info[dep] = {'license': 'null', 'homepage': 'null'}
 
 
-# At this point, 'licenses' dictionary contains the mapping of dependencies to their licenses
-
-for dep, info in dependencies_info.items():
-    license_id = info['license']
-    homepage = info['homepage']
-    spdx_document += f"""
-
-PackageName: {dep}
-SPDXID: SPDXRef-Package-{dep}
-PackageDownloadLocation: {homepage}
-PackageLicenseConcluded: {license_id}
-PackageLicenseDeclared: {license_id}
-LicenseID: {license_id}
-LicenseName: {license_id}"""
-#LicenseText: <text>License text for {license_id} can be found at [reference].</text>
-    spdx_document += f"""
-Extractor: Tool: licencpp"""
-
-# Save the SPDX document to a file
-with open("project_spdx_document.spdx", "w") as spdx_file:
-    spdx_file.write(spdx_document)
+generate_spdx_document(dependencies_info)
