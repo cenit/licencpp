@@ -11,7 +11,7 @@ jobs:
   win-vcpkg:
     runs-on: windows-latest
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
       with:
         submodules: recursive
     - name: 'Build'
@@ -20,11 +20,7 @@ jobs:
         python -m pip install --upgrade pip setuptools wheel pyinstaller
         pip install -r requirements.txt
         pyinstaller -F ./src/licencpp.py --noconfirm
-    - uses: actions/upload-artifact@v3
+    - uses: actions/upload-artifact@v4
       with:
         name: licencpp-${{ runner.os }}
-        path: ${{ github.workspace }}/*licencpp*
-    - uses: actions/upload-artifact@v3
-      with:
-        name: licencpp-${{ runner.os }}
-        path: ${{ github.workspace }}/*.md
+        path: ${{ github.workspace }}/dist/licencpp.exe

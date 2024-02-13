@@ -17,6 +17,13 @@ import xml.etree.ElementTree as ET
 import datetime
 import yaml
 
+SCRIPT_NAME = "licencpp"
+SCRIPT_VERSION = "0.2.0"
+SCRIPT_LICENSE = "MIT"
+
+# Display welcome message
+print(f"Welcome to {SCRIPT_NAME} v{SCRIPT_VERSION} - Licensed under {SCRIPT_LICENSE}\n")
+
 # Define paths
 project_vcpkg_json = 'vcpkg.json'  # Path to your project's vcpkg.json
 vcpkg_ports_dir = '../vcpkg/ports'
@@ -51,7 +58,7 @@ def generate_spdx_document(dependencies_info):
         "spdxVersion": "SPDX-2.2",
         "creationInfo": {
             "created": datetime.datetime.now().strftime('%Y-%m-%dT%H:%M:%S.%f')[:-3] + 'Z',
-            "creators": ["Tool: licencpp.py 0.2.0", "Organization: none", "Person: Stefano Sinigardi"],
+            "creators": [f"Tool: {SCRIPT_NAME}.py {SCRIPT_VERSION}", "Organization: none", "Person: Stefano Sinigardi"],
             "licenseListVersion": "3.9"
         },
         "name": f"{project_name}",
