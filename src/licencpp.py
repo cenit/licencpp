@@ -16,6 +16,7 @@ import subprocess
 import xml.etree.ElementTree as ET
 import datetime
 import yaml
+import argparse
 
 SCRIPT_NAME = "licencpp"
 SCRIPT_VERSION = "0.2.0"
@@ -24,11 +25,21 @@ SCRIPT_LICENSE = "MIT"
 # Display welcome message
 print(f"Welcome to {SCRIPT_NAME} v{SCRIPT_VERSION} - Licensed under {SCRIPT_LICENSE}\n")
 
-# Define paths
-project_vcpkg_json = 'vcpkg.json'  # Path to your project's vcpkg.json
-vcpkg_ports_dir = '../vcpkg/ports'
-vcpkg_executable = '..\\vcpkg\\vcpkg'  # Adjust this path to your vcpkg executable location
-dependencies_dgml = 'dependencies.dgml'
+parser = argparse.ArgumentParser(description='Creates project_spdx_document.spdx.yaml from vcpkg.json')
+parser.add_argument('--project_vcpkg_json', dest='project_vcpkg_json', default='vcpkg.json',
+                    help="Path to your project's vcpkg.json", required=False)
+parser.add_argument('--vcpkg_ports_dir', dest='vcpkg_ports_dir', default='../vcpkg/ports',
+                    help="Path to vcpkg official registry (port folder)", required=False)
+parser.add_argument('--vcpkg_executable', dest='vcpkg_executable', default='..\\vcpkg\\vcpkg',
+                    help="Path to vcpkg executable", required=False)
+parser.add_argument('--dependencies_dgml', dest='dependencies_dgml', default='dependencies.dgml',
+                    help="Path to vcpkg-built dependencies.dgml", required=False)
+args = parser.parse_args()
+
+project_vcpkg_json = args.project_vcpkg_json
+vcpkg_ports_dir = args.vcpkg_ports_dir
+vcpkg_executable = args.vcpkg_executable
+dependencies_dgml = args.dependencies_dgml
 
 # Read project's vcpkg.json to get the project name
 with open(project_vcpkg_json, 'r') as file:
