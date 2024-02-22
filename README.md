@@ -16,4 +16,4 @@ If you need to install ORT, please refer to the [official documentation](https:/
 licencpp requires Python 3.6 or later and the following Python packages:
 
 - pyyaml
-
+- argparse

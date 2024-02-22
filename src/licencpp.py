@@ -19,7 +19,7 @@ import yaml
 import argparse
 
 SCRIPT_NAME = "licencpp"
-SCRIPT_VERSION = "0.2.0"
+SCRIPT_VERSION = "0.2.1"
 SCRIPT_LICENSE = "MIT"
 
 # Display welcome message
@@ -42,6 +42,10 @@ vcpkg_executable = args.vcpkg_executable
 dependencies_dgml = args.dependencies_dgml
 
 # Read project's vcpkg.json to get the project name
+if not os.path.exists(project_vcpkg_json):
+    print(f"Error: {project_vcpkg_json} not found")
+    exit(1)
+
 with open(project_vcpkg_json, 'r') as file:
     project_data = json.load(file)
 project_name = project_data.get('name')
@@ -51,7 +55,7 @@ project_version = project_data.get('version')
 project_description = project_data.get('description')
 
 # Generate dependencies.dgml file
-command = f"{vcpkg_executable} depend-info --overlay-ports=. {project_name} --format=dgml > {dependencies_dgml}"
+command = f'"{vcpkg_executable}" depend-info --overlay-ports=. {project_name} --format=dgml > {dependencies_dgml}'
 subprocess.run(command, shell=True, check=True)
 
 # Parse the DGML file to extract dependency names
