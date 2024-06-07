@@ -34,30 +34,30 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - name: 'Download Artifacts - Ubuntu'
-      #if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/')
+      if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/')
       uses: actions/download-artifact@v4
       with:
         name: licencpp-Linux
-        path: ./dist/ubuntu
+        path: ${{ github.workspace }}/dist/ubuntu
     - name: 'Download Artifacts - Windows'
-      #if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/')
+      if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/')
       uses: actions/download-artifact@v4
       with:
         name: licencpp-Windows
-        path: ./dist/windows
+        path: ${{ github.workspace }}/dist/windows
     - name: 'Download Artifacts - MacOS'
-      #if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/')
+      if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/')
       uses: actions/download-artifact@v4
       with:
         name: licencpp-macOS
-        path: ./dist/macos
+        path: ${{ github.workspace }}/dist/macos
     - name: 'List files in dist directory (Linux/macOS)'
-      #if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/')
+      if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/')
       run: |
         echo "Listing files in dist directory:"
-        find ./dist
+        find ${{ github.workspace }}/dist
     - name: 'Create Release'
-      #if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/')
+      if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/')
       id: create_release
       uses: actions/create-release@v1
       with:
@@ -68,31 +68,31 @@ jobs:
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     - name: 'Upload Release Asset - Ubuntu'
-      #if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/')
+      if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/')
       uses: actions/upload-release-asset@v1
       with:
         upload_url: ${{ steps.create_release.outputs.upload_url }}
-        asset_path: ./dist/ubuntu/licencpp*
+        asset_path: ${{ github.workspace }}/dist/ubuntu/licencpp
         asset_name: licencpp-Linux.zip
         asset_content_type: application/zip
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     - name: 'Upload Release Asset - Windows'
-      #if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/')
+      if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/')
       uses: actions/upload-release-asset@v1
       with:
         upload_url: ${{ steps.create_release.outputs.upload_url }}
-        asset_path: ./dist/windows/licencpp*
+        asset_path: ${{ github.workspace }}/dist/windows/licencpp.exe
         asset_name: licencpp-Windows.zip
         asset_content_type: application/zip
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     - name: 'Upload Release Asset - MacOS'
-      #if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/')
+      if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/')
       uses: actions/upload-release-asset@v1
       with:
         upload_url: ${{ steps.create_release.outputs.upload_url }}
-        asset_path: ./dist/macos/licencpp*
+        asset_path: ${{ github.workspace }}/dist/macos/licencpp
         asset_name: licencpp-macOS.zip
         asset_content_type: application/zip
       env:
