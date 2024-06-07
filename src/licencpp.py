@@ -19,7 +19,7 @@ import yaml
 import argparse
 
 SCRIPT_NAME = "licencpp"
-SCRIPT_VERSION = "0.2.1"
+SCRIPT_VERSION = "0.2.2"
 SCRIPT_LICENSE = "MIT"
 
 # Display welcome message
@@ -32,6 +32,8 @@ parser.add_argument('--vcpkg_ports_dir', dest='vcpkg_ports_dir', default='../vcp
                     help="Path to vcpkg official registry (port folder)", required=False)
 parser.add_argument('--vcpkg_executable', dest='vcpkg_executable', default='..\\vcpkg\\vcpkg',
                     help="Path to vcpkg executable", required=False)
+parser.add_argument('--project_features', dest='project_features', default='',
+                    help="Features to enable in the project", required=False)
 parser.add_argument('--dependencies_dgml', dest='dependencies_dgml', default='dependencies.dgml',
                     help="Path to vcpkg-built dependencies.dgml", required=False)
 args = parser.parse_args()
@@ -40,6 +42,7 @@ project_vcpkg_json = args.project_vcpkg_json
 vcpkg_ports_dir = args.vcpkg_ports_dir
 vcpkg_executable = args.vcpkg_executable
 dependencies_dgml = args.dependencies_dgml
+project_features = args.project_features
 
 # Read project's vcpkg.json to get the project name
 if not os.path.exists(project_vcpkg_json):
@@ -54,8 +57,12 @@ project_homepage = project_data.get('homepage')
 project_version = project_data.get('version')
 project_description = project_data.get('description')
 
+if project_features is not None and project_features != '':
+    project_features = f'[{project_features}]'
+
 # Generate dependencies.dgml file
-command = f'"{vcpkg_executable}" depend-info --overlay-ports=. {project_name} --format=dgml > {dependencies_dgml}'
+command = f'"{vcpkg_executable}" depend-info --overlay-ports=. {project_name}{project_features} --format=dgml > {dependencies_dgml}'
+print(f"Running: {command}")
 subprocess.run(command, shell=True, check=True)
 
 # Parse the DGML file to extract dependency names
