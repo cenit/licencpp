@@ -30,6 +30,8 @@ parser.add_argument('--project_vcpkg_json', dest='project_vcpkg_json', default='
                     help="Path to your project's vcpkg.json", required=False)
 parser.add_argument('--vcpkg_ports_dir', dest='vcpkg_ports_dir', default='../vcpkg/ports',
                     help="Path to vcpkg official registry (port folder)", required=False)
+parser.add_argument('--vcpkg_additional_registry', dest='vcpkg_additional_registry', default='',
+                    help="Path to additional vcpkg registry (port folder)", required=False)
 parser.add_argument('--vcpkg_executable', dest='vcpkg_executable', default='..\\vcpkg\\vcpkg',
                     help="Path to vcpkg executable", required=False)
 parser.add_argument('--project_features', dest='project_features', default='',
@@ -40,6 +42,7 @@ args = parser.parse_args()
 
 project_vcpkg_json = args.project_vcpkg_json
 vcpkg_ports_dir = args.vcpkg_ports_dir
+vcpkg_additional_registry = args.vcpkg_additional_registry
 vcpkg_executable = args.vcpkg_executable
 dependencies_dgml = args.dependencies_dgml
 project_features = args.project_features
@@ -99,7 +102,7 @@ def generate_spdx_document(dependencies_info):
         "homepage": project_homepage or "NOASSERTION",
         "licenseConcluded": "NOASSERTION",
         "licenseDeclared": project_license or "NOASSERTION",
-        #"description": project_description or "NOASSERTION",
+        "description": project_description or "NOASSERTION",
         "versionInfo": project_version or "NOASSERTION",
     }
     spdx_document["packages"].append(package)
@@ -115,7 +118,7 @@ def generate_spdx_document(dependencies_info):
             "homepage": info['homepage'] or "NOASSERTION",
             "licenseConcluded": "NOASSERTION",
             "licenseDeclared": info['license'] or "NOASSERTION",
-            #"description": info['description'] or "NOASSERTION",
+            "description": info['description'] or "NOASSERTION",
             "versionInfo": info['version'] or "NOASSERTION",
         }
         spdx_document["packages"].append(package)
@@ -138,6 +141,12 @@ def get_license_and_homepage_from_vcpkg_json(dep_name):
         with open(vcpkg_json_path, 'r') as file:
             dep_data = json.load(file)
         return dep_data.get('license'), dep_data.get('homepage'), dep_data.get('version'), dep_data.get('description')
+    if vcpkg_additional_registry != '':
+        vcpkg_json_path = os.path.join(vcpkg_additional_registry, dep_name, 'vcpkg.json')
+        if os.path.exists(vcpkg_json_path):
+            with open(vcpkg_json_path, 'r') as file:
+                dep_data = json.load(file)
+            return dep_data.get('license'), dep_data.get('homepage'), dep_data.get('version'), dep_data.get('description')
     return None, None, None, None
 
 dependencies = parse_dgml(dependencies_dgml)
