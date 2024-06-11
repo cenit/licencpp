@@ -19,7 +19,7 @@ import yaml
 import argparse
 
 SCRIPT_NAME = "licencpp"
-SCRIPT_VERSION = "0.2.2"
+SCRIPT_VERSION = "0.2.3"
 SCRIPT_LICENSE = "MIT"
 
 # Display welcome message
@@ -38,6 +38,8 @@ parser.add_argument('--project_features', dest='project_features', default='',
                     help="Features to enable in the project", required=False)
 parser.add_argument('--dependencies_dgml', dest='dependencies_dgml', default='dependencies.dgml',
                     help="Path to vcpkg-built dependencies.dgml", required=False)
+parser.add_argument('--verbose', dest='verbose', default=False, action='store_true',
+                    help="Run the program in verbose mode")
 args = parser.parse_args()
 
 project_vcpkg_json = args.project_vcpkg_json
@@ -46,6 +48,7 @@ vcpkg_additional_registry = args.vcpkg_additional_registry
 vcpkg_executable = args.vcpkg_executable
 dependencies_dgml = args.dependencies_dgml
 project_features = args.project_features
+verbose = args.verbose
 
 # Read project's vcpkg.json to get the project name
 if not os.path.exists(project_vcpkg_json):
@@ -65,7 +68,8 @@ if project_features is not None and project_features != '':
 
 # Generate dependencies.dgml file
 command = f'"{vcpkg_executable}" depend-info --overlay-ports=. {project_name}{project_features} --format=dgml > {dependencies_dgml}'
-print(f"Running: {command}")
+if verbose:
+    print(f"Running: {command}")
 subprocess.run(command, shell=True, check=True)
 
 # Parse the DGML file to extract dependency names
@@ -135,17 +139,23 @@ def generate_spdx_document(dependencies_info):
         yaml.dump(spdx_document, spdx_file,
                   sort_keys=False, default_flow_style=False)
 
-def get_license_and_homepage_from_vcpkg_json(dep_name):
-    vcpkg_json_path = os.path.join(vcpkg_ports_dir, dep_name, 'vcpkg.json')
-    if os.path.exists(vcpkg_json_path):
-        with open(vcpkg_json_path, 'r') as file:
-            dep_data = json.load(file)
-        return dep_data.get('license'), dep_data.get('homepage'), dep_data.get('version'), dep_data.get('description')
+def get_data_from_vcpkg_json(dep_name):
+    if verbose:
+        print(f"Analyzing {dep_name}")
+    vcpkg_json_paths = [os.path.join(vcpkg_ports_dir, dep_name, 'vcpkg.json')]
     if vcpkg_additional_registry != '':
-        vcpkg_json_path = os.path.join(vcpkg_additional_registry, dep_name, 'vcpkg.json')
+        vcpkg_json_paths.append(os.path.join(vcpkg_additional_registry, dep_name, 'vcpkg.json'))
+    for vcpkg_json_path in vcpkg_json_paths:
         if os.path.exists(vcpkg_json_path):
             with open(vcpkg_json_path, 'r') as file:
                 dep_data = json.load(file)
+                #license = dep_data.get('license')
+                #homepage = dep_data.get('homepage')
+                #version = dep_data.get('version')
+                #description = dep_data.get('description')
+                if verbose:
+                    print(
+                        f"Using {vcpkg_json_path} as a source for {dep_name} ({dep_data.get('version')}:{dep_data.get('license')})")
             return dep_data.get('license'), dep_data.get('homepage'), dep_data.get('version'), dep_data.get('description')
     return None, None, None, None
 
@@ -153,7 +163,7 @@ dependencies = parse_dgml(dependencies_dgml)
 dependencies_info = {}
 
 for dep in dependencies:
-    license, homepage, version, description = get_license_and_homepage_from_vcpkg_json(dep)
+    license, homepage, version, description = get_data_from_vcpkg_json(dep)
     dependencies_info[dep] = {'license': license, 'homepage': homepage, 'version': version, 'description': description}
 
 generate_spdx_document(dependencies_info)
