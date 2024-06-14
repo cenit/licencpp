@@ -20,7 +20,7 @@ import argparse
 from sys import exit
 
 SCRIPT_NAME = "licencpp"
-SCRIPT_VERSION = "0.2.4"
+SCRIPT_VERSION = "0.2.5"
 SCRIPT_LICENSE = "MIT"
 
 # Display welcome message
@@ -155,21 +155,29 @@ def generate_spdx_document(dependencies_info):
 def get_data_from_vcpkg_json(dep_name):
     if verbose:
         print(f"Analyzing {dep_name}")
-    vcpkg_json_paths = [os.path.join(vcpkg_ports_dir, dep_name, 'vcpkg.json')]
+    vcpkg_json_paths = []
+    # First check the additional registry, then the official registry (so that if there's an overlay, the additional registry takes precedence)
     if vcpkg_additional_registry != '':
         vcpkg_json_paths.append(os.path.join(vcpkg_additional_registry, dep_name, 'vcpkg.json'))
+    vcpkg_json_paths.append(os.path.join(vcpkg_ports_dir, dep_name, 'vcpkg.json'))
     for vcpkg_json_path in vcpkg_json_paths:
         if os.path.exists(vcpkg_json_path):
             with open(vcpkg_json_path, 'r') as file:
                 dep_data = json.load(file)
-                #license = dep_data.get('license')
-                #homepage = dep_data.get('homepage')
-                #version = dep_data.get('version')
-                #description = dep_data.get('description')
+                license = dep_data.get('license')
+                homepage = dep_data.get('homepage')
+                version = dep_data.get('version')
+                description = dep_data.get('description')
+                # if description is a list of strings, we need to join them into a single string
+                if isinstance(description, list):
+                    description = ' '.join(description)
+                # if version is missing, we try looking for the field "version-date"
+                if version is None:
+                    version = dep_data.get('version-date')
                 if verbose:
                     print(
-                        f"Using {vcpkg_json_path} as a source for {dep_name} ({dep_data.get('version')}:{dep_data.get('license')})")
-            return dep_data.get('license'), dep_data.get('homepage'), dep_data.get('version'), dep_data.get('description')
+                        f"Using {vcpkg_json_path} as a source for {dep_name} ({version}:{license})")
+            return license, homepage, version, description
     return None, None, None, None
 
 dependencies = parse_dgml(dependencies_dgml)
