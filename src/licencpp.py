@@ -20,7 +20,7 @@ import argparse
 from sys import exit
 
 SCRIPT_NAME = "licencpp"
-SCRIPT_VERSION = "0.2.5"
+SCRIPT_VERSION = "0.2.6"
 SCRIPT_LICENSE = "MIT"
 
 # Display welcome message
@@ -36,7 +36,7 @@ parser.add_argument('--vcpkg_additional_registry', dest='vcpkg_additional_regist
 parser.add_argument('--vcpkg_executable', dest='vcpkg_executable', default='..\\vcpkg\\vcpkg',
                     help="Path to vcpkg executable", required=False)
 parser.add_argument('--project_features', dest='project_features', default='',
-                    help="Features to enable in the project", required=False)
+                    help="Features to enable in the project (semicolon-separated)", required=False)
 parser.add_argument('--dependencies_dgml', dest='dependencies_dgml', default='dependencies.dgml',
                     help="Path to vcpkg-built dependencies.dgml", required=False)
 parser.add_argument('--mermaid', dest='mermaid', default=False, action='store_true',
@@ -71,16 +71,16 @@ project_version = project_data.get('version')
 project_description = project_data.get('description')
 
 if project_features is not None and project_features != '':
-    project_features = f'[{project_features}]'
+    project_features = f'--x-feature={project_features}'
 
 # Generate dependencies.dgml file
-command = f'"{vcpkg_executable}" depend-info --overlay-ports=. {project_name}{project_features} --format=dgml > {dependencies_dgml}'
+command = f'"{vcpkg_executable}" depend-info {project_features} --format=dgml > {dependencies_dgml}'
 if verbose:
     print(f"Running: {command}")
 subprocess.run(command, shell=True, check=True)
 
 if enable_mermaid:
-    command = f'"{vcpkg_executable}" depend-info --overlay-ports=. {project_name}{project_features} --format=mermaid > {dependencies_md}'
+    command = f'"{vcpkg_executable}" depend-info {project_features} --format=mermaid > {dependencies_md}'
     if verbose:
         print(f"Running: {command}")
     subprocess.run(command, shell=True, check=True)
